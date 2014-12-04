@@ -1,0 +1,20 @@
+#ifndef _HWSTUB_H_
+#define _HWSTUB_H_
+
+#include "IHelloWorld.h"
+
+class HelloWorldService: public BpInterface<IHelloWorld>
+{
+public:
+        virtual HelloWorldService(){};
+        static void instantiate();
+        virtual void hellothere(const char *str);
+        status_t onTransact(uint32_t code,
+                                const Parcel &data,
+                                Parcel *reply,
+                                uint32_t flags)
+private:
+        HelloWorldService(){};
+}
+
+#endif

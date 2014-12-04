@@ -1,0 +1,25 @@
+#ifndef _HWPROXY_H_
+#define _HWPROXY_H_
+
+#include <string.h>
+#include <cutils/atomic.h>
+#include <utils/Errors.h>
+#include <binder/IServiceManager.h>
+#include <utils/String16.h>
+#include <binder/Parcel.h>
+
+#include "IHelloWorld.h"
+
+namespace android {
+
+class BpHelloWorld : public BpInterface<IHelloWorldClient>
+{
+public:
+        BpHelloWorldClient(const sp<IBinder>& impl)
+                : BpInterface<IHelloWorldClient>(impl) {}
+        virtual void hellothere(const char *str);
+};
+
+}
+
+#endif

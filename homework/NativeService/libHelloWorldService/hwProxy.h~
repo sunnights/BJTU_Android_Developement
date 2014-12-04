@@ -1,0 +1,16 @@
+#ifndef _HWPROXY_H_
+#define _HWPROXY_H_
+
+#include "IHelloWorld.h"
+
+class BpHelloWorld : public BpInterface<IHelloWorld>
+{
+public:
+        
+        virtual void hellothere(const char *str);
+        
+private:
+        BpHelloWorld(const sp<IBinder>& remote) BpInterface<IHelloWorld>(remote) {};
+};
+
+#endif
