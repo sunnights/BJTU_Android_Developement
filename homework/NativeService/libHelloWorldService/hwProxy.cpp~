@@ -1,8 +1,0 @@
-#include "hwProxy.h"
-
-void hellothere(const char *str) {
-        Parcel data, reply;
-        data.writeInterfaceToken(getInterfaceDescriptor());
-        data.writeString16(String16(str));
-        remote()->transact(HW_HELLOTHERE, data, &reply, IBinder::FLAG_ONEWAY);
-}
