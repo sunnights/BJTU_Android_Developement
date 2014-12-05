@@ -13,6 +13,7 @@ public:
                 android::Parcel data, reply;
                 data.writeInterfaceToken(IHelloWorld::getInterfaceDescriptor());
                 data.writeCString(str);
+                //printf("str: %s\n",data.readCString(str));
                 remote()->transact(HW_HELLOTHERE, data, &reply, android::IBinder::FLAG_ONEWAY);
         }
 };

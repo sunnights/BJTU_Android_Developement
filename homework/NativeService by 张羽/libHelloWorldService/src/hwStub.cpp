@@ -30,8 +30,10 @@ android::status_t BnHelloWorld::onTransact(uint32_t code,
         printf("OnTransact(%u, %u)\n", code, flags);
         switch(code) {
         case HW_HELLOTHERE: {
+                for (int i = 0; i < 11; i++) {
+                        data.readCString();
+                }
                 const char *str = data.readCString();
-                printf("str:%s\n",data.readCString());
                 hellothere(str);
                 return android::NO_ERROR;
         } break;
