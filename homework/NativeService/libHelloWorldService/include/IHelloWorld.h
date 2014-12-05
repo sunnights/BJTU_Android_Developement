@@ -3,20 +3,16 @@
 
 #include <binder/IInterface.h>
 
-#define HELLOWORLD_NAME "org.IHelloWorld"
+#define HELLOWORLD_NAME "org.zy.HelloWorld"
 
-namespace android{
+enum {
+        HW_HELLOTHERE = 1,
+};
 
-class IHelloWorld : public IInterface {
-protected:
-        enum {
-                HW_HELLOTHERE = IBinder::FIRST_CALL_TRANSACTION
-        };
+class IHelloWorld : public android::IInterface {
 public:
         DECLARE_META_INTERFACE(HelloWorld); 
         virtual void hellothere(const char *str) = 0;
 };
-
-}
 
 #endif

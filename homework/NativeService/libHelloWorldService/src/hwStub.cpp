@@ -1,39 +1,42 @@
-#include <string.h>
-#include <cutils/atomic.h>
-#include <utils/Errors.h>
 #include <binder/IServiceManager.h>
 #include <utils/String16.h>
 #include <utils/String8.h>
-#include <binder/IPCThreadState.h>
+
 #include "hwStub.h"
 
-namespace android {
+HelloWorldService::HelloWorldService()
+{
+        printf("--- HelloWorldService created ---\n");
+}
+
+HelloWorldService::~HelloWorldService()
+{
+        printf("--- HelloWorldService destroyed ---\n");
+}
 
 void HelloWorldService::instantiate() {
-        defaultServiceManager()->addService(IHelloWorld::descriptor, new HelloWorldService());
+        android::defaultServiceManager()->addService(IHelloWorld::descriptor, new HelloWorldService());
 }
 
 void HelloWorldService::hellothere(const char *str) {
-        printf("hello: %s\n", str);
+        printf("# HelloWorldService : %s #\n", str);
 }
 
-status_t HelloWorldService::onTransact(uint32_t code,
-                                        const Parcel &data,
-                                        Parcel *reply,
+android::status_t BnHelloWorld::onTransact(uint32_t code,
+                                        const android::Parcel &data,
+                                        android::Parcel *reply,
                                         uint32_t flags)
 {
-        printf("OnTransact(%u, %u)", code, flags);
+        printf("OnTransact(%u, %u)\n", code, flags);
         switch(code) {
         case HW_HELLOTHERE: {
-                String16 str = data.readString16();
-                hellothere(String8(str).string());
-                return NO_ERROR;
+                const char *str = data.readCString();
+                printf("str:%s\n",data.readCString());
+                hellothere(str);
+                return android::NO_ERROR;
         } break;
         default:
                 return BBinder::onTransact(code, data, reply, flags);
-                ;
         }
-        return NO_ERROR;
-}
-
+        return android::NO_ERROR;
 }
