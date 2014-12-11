@@ -1,6 +1,6 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: /home/chenty/workspace_adt/FibonacciCommon/src/com/homework3/fibonaccicommon/IFibonacciService.aidl
+ * Original file: /home/zy/workspace/FibonacciCommon/src/com/homework3/fibonaccicommon/IFibonacciService.aidl
  */
 package com.homework3.fibonaccicommon;
 public interface IFibonacciService extends android.os.IInterface

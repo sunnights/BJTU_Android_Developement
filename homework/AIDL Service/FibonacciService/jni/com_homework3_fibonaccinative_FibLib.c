@@ -13,8 +13,10 @@ JNIEXPORT jlong JNICALL Java_com_homework3_fibonaccinative_FibLib_fibNI
   (JNIEnv *env, jclass clazz, jlong n) { /* <4> */
     jlong previous = -1;
     jlong result = 1;
-    for (jlong i = 0; i <= n; i++) {
-        jlong sum = result + previous;
+    jlong i;
+    jlong sum;
+    for (i = 0; i <= n; i++) {
+        sum = result + previous;
         previous = result;
         result = sum;
     }

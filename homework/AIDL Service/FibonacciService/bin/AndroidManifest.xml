@@ -15,7 +15,7 @@
         
         <service android:name=".FibonacciService">
 			<intent-filter>
-				<action android:name="com.homework3.fibonaccicommon.IFibonacciService" /> <!-- <1> -->
+				<action android:name="com.homework3.fibonaccicommon.IFibonacciService" />
 			</intent-filter>
 		</service>
     </application>

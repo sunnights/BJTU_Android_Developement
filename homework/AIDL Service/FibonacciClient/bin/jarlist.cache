@@ -1,6 +1,6 @@
 # cache for current jar dependency. DO NOT EDIT.
 # format is <lastModified> <length> <SHA-1> <path>
 # Encoding is UTF-8
-1418091590000 995386 a13f8fe2c278737e2f0b6fcf00f6b2ae4034aacf /home/chenty/workspace_adt/FibonacciClient/libs/android-support-v4.jar
-1417065816000 995386 a13f8fe2c278737e2f0b6fcf00f6b2ae4034aacf /home/chenty/workspace_adt/appcompat_v7/libs/android-support-v4.jar
-1418090919000 995386 a13f8fe2c278737e2f0b6fcf00f6b2ae4034aacf /home/chenty/workspace_adt/FibonacciCommon/libs/android-support-v4.jar
+1418334622000 758727 efec67655f6db90757faa37201efcee2a9ec3507 /home/zy/workspace/FibonacciCommon/libs/android-support-v4.jar
+1418335146000 758727 efec67655f6db90757faa37201efcee2a9ec3507 /home/zy/workspace/FibonacciClient/libs/android-support-v4.jar
+1403515040000 758727 efec67655f6db90757faa37201efcee2a9ec3507 /home/zy/workspace/appcompat_v7/libs/android-support-v4.jar

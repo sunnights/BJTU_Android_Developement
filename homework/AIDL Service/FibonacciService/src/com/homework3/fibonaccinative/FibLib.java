@@ -10,8 +10,10 @@ public class FibLib {
     public static long fibJI(long n) { // <2>
         long previous = -1;
         long result = 1;
-        for (long i = 0; i <= n; i++) {
-            long sum = result + previous;
+        long i;
+        long sum;
+        for (i = 0; i <= n; i++) {
+            sum = result + previous;
             previous = result;
             result = sum;
         }

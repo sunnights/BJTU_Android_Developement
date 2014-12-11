@@ -1,5 +1,5 @@
 
-package com.example.fibonacciclient;
+package com.homework3.fibonacciclient;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -20,9 +20,9 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.fibonaccicommon.FibonacciRequest;
-import com.example.fibonaccicommon.FibonacciResponse;
-import com.example.fibonaccicommon.IFibonacciService;
+import com.homework3.fibonaccicommon.FibonacciRequest;
+import com.homework3.fibonaccicommon.FibonacciResponse;
+import com.homework3.fibonaccicommon.IFibonacciService;
 
 public class MainActivity extends Activity implements OnClickListener, ServiceConnection {
 
