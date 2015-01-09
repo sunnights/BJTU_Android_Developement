@@ -1,4 +1,4 @@
-package cn.edu.bjtu.soundrecorder;
+package cn.edu.bjtu.soundrecorder.utils;
 
 import android.app.Application;
 

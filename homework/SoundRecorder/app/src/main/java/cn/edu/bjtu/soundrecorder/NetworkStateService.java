@@ -35,10 +35,7 @@ public class NetworkStateService extends Service {
                 }
                 if (connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED) {
                     Log.d(TAG, "已连接WIFI");
-//                        mBaiduPCS.test_upload();
-//                    mSBaiduPCS.test_getQuota();
-                    mSBaiduPCS.test_getQuota();
-                    // TODO
+                    SBaiduPCS.getInstance().test_uploadAll();
                 }
             }
         }
@@ -67,18 +64,5 @@ public class NetworkStateService extends Service {
     public void onDestroy() {
         super.onDestroy();
         unregisterReceiver(mReceiver);
-    }
-
-    public boolean isWifiConnected(Context context) {
-        if (context != null) {
-            ConnectivityManager mConnectivityManager = (ConnectivityManager) context
-                    .getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo mWiFiNetworkInfo = mConnectivityManager
-                    .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-            if (mWiFiNetworkInfo != null) {
-                return mWiFiNetworkInfo.isAvailable();
-            }
-        }
-        return false;
     }
 }

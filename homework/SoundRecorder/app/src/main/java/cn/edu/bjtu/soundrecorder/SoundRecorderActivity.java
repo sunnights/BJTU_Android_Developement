@@ -1,5 +1,6 @@
 package cn.edu.bjtu.soundrecorder;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -10,6 +11,7 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.FileObserver;
@@ -18,6 +20,7 @@ import android.os.Message;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -26,6 +29,9 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.baidu.oauth.BaiduOAuth;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -34,15 +40,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import cn.edu.bjtu.soundrecorder.utils.CommonUtils;
+import cn.edu.bjtu.soundrecorder.utils.MusicFilter;
+
 public class SoundRecorderActivity extends Activity {
 
     private static final String TAG = "SoundRecorder";
-
     private FileObserver mFileObserver;
-    private SBaiduPCS mSBaiduPCS;
 
-    // the handler
-    private Handler mbUiThreadHandler = null;
     private final static String mSavePath = (Environment.getExternalStorageDirectory() + "/SoundRecorder/").toString();
     private String mSoundFileName = null;
 
@@ -85,17 +90,21 @@ public class SoundRecorderActivity extends Activity {
             String durtime = ShowOclock(System.currentTimeMillis() - startTime);
             txtView_clock.setText(durtime.split("#")[0]);
             txtView_clock_mills.setText(durtime.split("#")[1]);
-            mHandler.postDelayed(this, 5);
+            mHandler.postDelayed(this, 2);
         }
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if(!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        new SyncFilesTask().execute();
+
         setContentView(R.layout.drawer_layout);
-
         // mTitle = (String) getTitle();
-
         if (null == mFileObserver) {
             mFileObserver = new SDCardFileObserver("/sdcard/SoundRecorder/");
             mFileObserver.startWatching();
@@ -106,11 +115,8 @@ public class SoundRecorderActivity extends Activity {
         Intent i=new Intent(getApplicationContext(),NetworkStateService.class);
         startService(i);
 
-        mbUiThreadHandler = new Handler();
-        mSBaiduPCS = SBaiduPCS.getInstance();
-
-        findViewById(R.id.btnStartRecord).setOnClickListener(btnClickListener);
-        findViewById(R.id.btnStopRecord).setOnClickListener(btnClickListener);
+        /*findViewById(R.id.btnStartRecord).setOnClickListener(btnClickListener);
+        findViewById(R.id.btnStopRecord).setOnClickListener(btnClickListener);*/
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
@@ -171,12 +177,22 @@ public class SoundRecorderActivity extends Activity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id){
+            case R.id.action_settings:
+//                Toast.makeText(this,R.string.action_settings,Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "云同步");
+                SBaiduPCS.getInstance().test_login(SoundRecorderActivity.this);
+                break;
+            case R.id.account_setting:
+                Toast.makeText(this,R.string.action_account,Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.quit_setting:
+                Toast.makeText(this,R.string.action_quit,Toast.LENGTH_SHORT).show();
+                this.finish();
+                break;
+            default:
+                break;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -266,7 +282,7 @@ public class SoundRecorderActivity extends Activity {
     }
 
     private void startRecord() {
-
+        initScreen();
         if (mp == null) {
             btnRecord.setBackgroundResource(R.drawable.record_button_normal);
             flag = false;
@@ -278,7 +294,6 @@ public class SoundRecorderActivity extends Activity {
             SimpleDateFormat sDateFormat = new SimpleDateFormat(
                     "yyyy-MM-dd_HH-mm-ss");
             String date = sDateFormat.format(new Date(System.currentTimeMillis()));
-            System.out.println(date);
             mSoundFileName = date+".amr";
             File soundFile = new File(mTmpDir, mSoundFileName);
             if (!soundFile.exists()) {
@@ -297,12 +312,12 @@ public class SoundRecorderActivity extends Activity {
             try {
                 mp.prepare();
                 mp.start();
-                mHandler.postDelayed(runnable, 5);//开启一个线程计算录音时间
+                mHandler.postDelayed(runnable, 10);//开启一个线程计算录音时间
                 startTime = System.currentTimeMillis();
-                findViewById(R.id.btnStartRecord).setEnabled(false);
-                findViewById(R.id.btnStopRecord).setEnabled(true);
+                /*findViewById(R.id.btnStartRecord).setEnabled(false);
+                findViewById(R.id.btnStopRecord).setEnabled(true);*/
 
-                initScreen();
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -323,11 +338,11 @@ public class SoundRecorderActivity extends Activity {
             //清除计时器
             mHandler.removeCallbacks(runnable);
 
-            moveFile(mSavePath+"temp/"+mSoundFileName,mSavePath);
+            CommonUtils.moveFile(mSavePath + "temp/" + mSoundFileName, mSavePath);
 
             ReflashList(); //刷新List
-            findViewById(R.id.btnStartRecord).setEnabled(true);
-            findViewById(R.id.btnStopRecord).setEnabled(true);
+           /* findViewById(R.id.btnStartRecord).setEnabled(true);
+            findViewById(R.id.btnStopRecord).setEnabled(true);*/
             initScreen();
 
 //            mBaiduPCS.test_upload(mSavePath + mSoundFileName, mBaiduPCS.mbRootPath, mSoundFileName);
@@ -391,11 +406,15 @@ public class SoundRecorderActivity extends Activity {
         }
     }
 
-    //过滤文件类型
-    class MusicFilter implements FilenameFilter {
+    private class SyncFilesTask extends AsyncTask<Void,Void,Void> {
         @Override
-        public boolean accept(File dir, String filename) {
-            return (filename.endsWith(".amr") | filename.endsWith(".mp3"));
+        protected Void doInBackground(Void... params) {
+            Log.d(TAG,"SyncFilesTask");
+            if(CommonUtils.isWifiConnected(getApplicationContext())) {
+                Log.d(TAG,"SyncFilesTask2");
+                SBaiduPCS.getInstance().test_downloadAll();
+            }
+            return null;
         }
     }
 
@@ -412,40 +431,40 @@ public class SoundRecorderActivity extends Activity {
         public void onEvent(int event, final String file) {
             int action = event & FileObserver.ALL_EVENTS;
             switch (action) {
-                case FileObserver.ACCESS:
-                    Log.d(TAG, "文件或目录被访问, file: " + file);
-                    break;
-                case FileObserver.ATTRIB:
-                    Log.d(TAG, "文件属性被修改, file: " + file);
-                    break;
-                case FileObserver.CLOSE_NOWRITE:
-                    Log.d(TAG, "不可写文件被close, file: " + file);
-                    break;
-                case FileObserver.CLOSE_WRITE:
-                    // TODO
-                    Log.d(TAG, "可写文件被close, file: " + file);
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            super.run();
-//                            mBaiduPCS.test_upload(mSavePath + file, mBaiduPCS.mbRootPath, file);
-//                            test_upload("/sdcard/SoundRecorder/" + file, mbRootPath, file);
-                        }
-                    }.start();
-                    break;
-                case FileObserver.CREATE:
-                    Log.d(TAG, "创建新文件, file: " + file);
-                    break;
+//                case FileObserver.ACCESS:
+//                    Log.d(TAG, "文件或目录被访问, file: " + file);
+//                    break;
+//                case FileObserver.ATTRIB:
+//                    Log.d(TAG, "文件属性被修改, file: " + file);
+//                    break;
+//                case FileObserver.CLOSE_NOWRITE:
+//                    Log.d(TAG, "不可写文件被close, file: " + file);
+//                    break;
+//                case FileObserver.CLOSE_WRITE:
+//                    // TODO
+//                    Log.d(TAG, "可写文件被close, file: " + file);
+//                    new Thread() {
+//                        @Override
+//                        public void run() {
+//                            super.run();
+////                            mBaiduPCS.test_upload(mSavePath + file, mBaiduPCS.mbRootPath, file);
+////                            test_upload("/sdcard/SoundRecorder/" + file, mbRootPath, file);
+//                        }
+//                    }.start();
+//                    break;
+//                case FileObserver.CREATE:
+//                    Log.d(TAG, "创建新文件, file: " + file);
+//                    break;
                 case FileObserver.DELETE:
                     Log.d(TAG, "文件或目录被删除, file: " + file);
                     // TODO
                     break;
-                case FileObserver.DELETE_SELF:
-                    Log.d(TAG, "自删除, file: " + file);
-                    break;
-                case FileObserver.MODIFY:
-                    Log.d(TAG, "文件或目录被修改, file: " + file);
-                    break;
+//                case FileObserver.DELETE_SELF:
+//                    Log.d(TAG, "自删除, file: " + file);
+//                    break;
+//                case FileObserver.MODIFY:
+//                    Log.d(TAG, "文件或目录被修改, file: " + file);
+//                    break;
                 case FileObserver.MOVE_SELF:
                     Log.d(TAG, "自移动, file: " + file);
                     break;
@@ -458,9 +477,9 @@ public class SoundRecorderActivity extends Activity {
                         @Override
                         public void run() {
                             super.run();
-                            if(isWifiConnected(getApplicationContext())) {
+                            if(CommonUtils.isWifiConnected(getApplicationContext())) {
                                 Log.d(TAG,"WIFI连接，上传文件");
-                                mSBaiduPCS.test_upload(mSavePath + file, mSBaiduPCS.mbRootPath, file);
+                                SBaiduPCS.getInstance().test_upload(mSavePath + file, SBaiduPCS.getInstance().mbRootPath, file);
                             }
                             else {
                                 Log.d(TAG,"非WIFI，等待");
@@ -468,46 +487,12 @@ public class SoundRecorderActivity extends Activity {
                         }
                     }.start();
                     break;
-                case FileObserver.OPEN:
-                    Log.d(TAG, "文件或目录被打开, file: " + file);
-                    break;
+//                case FileObserver.OPEN:
+//                    Log.d(TAG, "文件或目录被打开, file: " + file);
+//                    break;
             }
         }
     }
 
-    /**
-     * 移动文件
-     * @param srcFileName 	源文件完整路径
-     * @param destDirName 	目的目录完整路径
-     * @return 文件移动成功返回true，否则返回false
-     */
-    public boolean moveFile(String srcFileName, String destDirName) {
 
-        File srcFile = new File(srcFileName);
-        if(!srcFile.exists() || !srcFile.isFile()) {
-            Log.d(TAG, srcFileName + "移动到" + destDirName + "失败");
-            return false;
-        }
-
-        File destDir = new File(destDirName);
-        if (!destDir.exists())
-            destDir.mkdirs();
-
-        Log.d(TAG,srcFileName+"移动到"+destDirName);
-
-        return srcFile.renameTo(new File(destDirName + File.separator + srcFile.getName()));
-    }
-
-    public boolean isWifiConnected(Context context) {
-        if (context != null) {
-            ConnectivityManager mConnectivityManager = (ConnectivityManager) context
-                    .getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo mWiFiNetworkInfo = mConnectivityManager
-                    .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-            if (mWiFiNetworkInfo != null) {
-                return mWiFiNetworkInfo.isAvailable();
-            }
-        }
-        return false;
-    }
 }

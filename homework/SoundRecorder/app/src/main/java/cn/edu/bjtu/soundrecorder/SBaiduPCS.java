@@ -1,5 +1,7 @@
 package cn.edu.bjtu.soundrecorder;
 
+import android.content.Context;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
@@ -9,9 +11,14 @@ import com.baidu.pcs.BaiduPCSActionInfo;
 import com.baidu.pcs.BaiduPCSClient;
 import com.baidu.pcs.BaiduPCSStatusListener;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import cn.edu.bjtu.soundrecorder.utils.CommonUtils;
+import cn.edu.bjtu.soundrecorder.utils.ContextUtil;
+import cn.edu.bjtu.soundrecorder.utils.MusicFilter;
 
 /**
  * Created by Jake on 2015/1/9.
@@ -24,6 +31,8 @@ public class SBaiduPCS {
     // the default root folder
     public final String mbRootPath = "/apps/pcstest_oauth/SoundRecorder/";
     private String mbOauth = "23.245c040d7c8a1c769de9db48dd1c95d4.2592000.1423293365.538706709-238347";
+    private final String mSavePath = (Environment.getExternalStorageDirectory() + "/SoundRecorder/").toString();
+    private final File dir = new File(mSavePath);//文件路径
 
     // the handler
     private Handler mbUiThreadHandler = null;
@@ -74,10 +83,10 @@ public class SBaiduPCS {
     //
     // login
     //
-    public void test_login() {
+    public void test_login(Context c) {
         Log.d(TAG, "Login");
         BaiduOAuth oauthClient = new BaiduOAuth();
-        oauthClient.startOAuth(ContextUtil.getInstance(), mbApiKey, new String[]{"basic", "netdisk"}, new BaiduOAuth.OAuthListener() {
+        oauthClient.startOAuth(c, mbApiKey, new String[]{"basic", "netdisk"}, new BaiduOAuth.OAuthListener() {
             @Override
             public void onException(String msg) {
                 Toast.makeText(ContextUtil.getInstance(), "Login failed " + msg, Toast.LENGTH_SHORT).show();
@@ -86,10 +95,8 @@ public class SBaiduPCS {
             @Override
             public void onComplete(BaiduOAuth.BaiduOAuthResponse response) {
                 if (null != response) {
-                    Log.d(TAG, "Login2");
                     mbOauth = response.getAccessToken();
 
-                    Log.d(TAG, "Login3");
                     Log.d(TAG, "mbOauth: " + mbOauth);
                     Toast.makeText(ContextUtil.getInstance(), "Token: " + mbOauth + "    User name:" + response.getUserName(), Toast.LENGTH_SHORT).show();
                 }
@@ -103,12 +110,12 @@ public class SBaiduPCS {
     }
 
     //
-    // get quota
+    // upload
     //
     public void test_upload(final String uploadFile, final String path, final String name) {
 
         if (null != mbOauth) {
-            Log.d(TAG,"Upload start");
+            Log.d(TAG,"Upload start: " + name);
 
             Thread workThread = new Thread(new Runnable() {
                 public void run() {
@@ -132,7 +139,7 @@ public class SBaiduPCS {
 
                             mbUiThreadHandler.post(new Runnable() {
                                 public void run() {
-                                    Toast.makeText(ContextUtil.getInstance(), "total: " + tl + "    sent:" + bs, Toast.LENGTH_SHORT).show();
+//                                    Toast.makeText(ContextUtil.getInstance(), "total: " + tl + "    sent:" + bs, Toast.LENGTH_SHORT).show();
                                 }
                             });
                         }
@@ -145,16 +152,51 @@ public class SBaiduPCS {
 
                     mbUiThreadHandler.post(new Runnable() {
                         public void run() {
-                            Toast.makeText(ContextUtil.getInstance(), response.status.errorCode + "  " + response.status.message + "  " + response.commonFileInfo.blockList, Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(ContextUtil.getInstance(), response.status.errorCode + "  " + response.status.message + "  " + response.commonFileInfo.blockList, Toast.LENGTH_SHORT).show();
                             if (0 == response.status.errorCode)
                                 Log.d(TAG, uploadFile + "已上传至" + path + name);
                             else
-                                Log.d(TAG, "上传失败 "+response.status.message);
+                                Log.d(TAG, uploadFile+"上传失败 "+response.status.message);
                         }
                     });
                 }
             });
 
+            workThread.start();
+        }
+    }
+
+    public void test_uploadAll() {
+        if (null != mbOauth) {
+            Log.d(TAG,"UploadAll start");
+            Thread workThread = new Thread(new Runnable() {
+                public void run() {
+                    BaiduPCSClient api = new BaiduPCSClient();
+                    api.setAccessToken(mbOauth);
+
+                    final BaiduPCSActionInfo.PCSListInfoResponse ret = api.list(mbRootPath, "name", "asc");
+                    List files = ret.list;
+                    Log.d(TAG, "当前List文件数量：" + files.size());
+
+                    if (dir.listFiles(new MusicFilter()).length > 0) {
+                        for (File file : dir.listFiles(new MusicFilter())) {
+                            boolean flag = true;
+                            for (Iterator i = files.iterator(); i.hasNext(); ) {
+                                BaiduPCSActionInfo.PCSCommonFileInfo Bfile = (BaiduPCSActionInfo.PCSCommonFileInfo) i.next();
+//                                Log.d(TAG,Bfile.blockList+"-"+ CommonUtils.getFileMD5(file));
+                                if (Bfile.blockList.equals(CommonUtils.getFileMD5(file))) {
+                                    Log.d(TAG, file.getName() + "百度云已存在");
+                                    flag = false;
+                                    break;
+                                }
+                            }
+                            if (flag == true) {
+                                test_upload(mSavePath + file.getName(), mbRootPath, file.getName());
+                            }
+                        }
+                    }
+                }
+            });
             workThread.start();
         }
     }
@@ -212,7 +254,7 @@ public class SBaiduPCS {
 
                             mbUiThreadHandler.post(new Runnable() {
                                 public void run() {
-                                    Toast.makeText(ContextUtil.getInstance(), "total: " + tl + "    downloaded:" + bs, Toast.LENGTH_SHORT).show();
+//                                    Toast.makeText(ContextUtil.getInstance(), "total: " + tl + "    downloaded:" + bs, Toast.LENGTH_SHORT).show();
                                 }
                             });
                         }
@@ -226,7 +268,11 @@ public class SBaiduPCS {
 
                     mbUiThreadHandler.post(new Runnable() {
                         public void run() {
-                            Toast.makeText(ContextUtil.getInstance(), "Download files:  " + ret.errorCode + "   " + ret.message, Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(ContextUtil.getInstance(), "Download files:  " + ret.errorCode + "   " + ret.message, Toast.LENGTH_SHORT).show();
+                            if (0 == ret.errorCode)
+                                Log.d(TAG, source + "已下载至" + target);
+                            else
+                                Log.d(TAG, source+"下载至"+target+"失败 "+ret.message);
                         }
                     });
                 }
@@ -236,6 +282,41 @@ public class SBaiduPCS {
         }
     }
 
+    public void test_downloadAll() {
+        if (null != mbOauth) {
+            Log.d(TAG, "DownloadAll start");
+            Thread workThread = new Thread(new Runnable() {
+                public void run() {
+                    BaiduPCSClient api = new BaiduPCSClient();
+                    api.setAccessToken(mbOauth);
+
+                    final BaiduPCSActionInfo.PCSListInfoResponse ret = api.list(mbRootPath, "name", "asc");
+                    List files = ret.list;
+                    Log.d(TAG, "当前List文件数量：" + files.size());
+
+                    for (Iterator i = files.iterator(); i.hasNext(); ) {
+                        boolean flag = true;
+                        BaiduPCSActionInfo.PCSCommonFileInfo Bfile = (BaiduPCSActionInfo.PCSCommonFileInfo) i.next();
+
+                        if (dir.listFiles(new MusicFilter()).length > 0) {
+                            for (File file : dir.listFiles(new MusicFilter())) {
+//                                Log.d(TAG,Bfile.path+"-"+ file.getName());
+                                if ((new File(Bfile.path)).getName().equals(file.getName())) {
+                                    Log.d(TAG, file.getName() + "本地已存在");
+                                    flag = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if(flag==true) {
+                            test_download(Bfile.path,mSavePath+(new File(Bfile.path)).getName());
+                        }
+                    }
+                }
+            });
+            workThread.start();
+        }
+    }
 
     //
     // mkdir
@@ -331,23 +412,21 @@ public class SBaiduPCS {
                     String path = mbRootPath;
 
                     final BaiduPCSActionInfo.PCSListInfoResponse ret = api.list(path, "name", "asc");
-                    //final BaiduPCSActionInfo.PCSListInfoResponse ret = api.imageStream();
-//                    Log.d(TAG,ret.list.toString());
                     List files = ret.list;
                     Log.d(TAG, "当前List文件数量：" + files.size());
 
                     for (Iterator i = files.iterator(); i.hasNext(); ) {
 //                        long fsId = (String) i.next();
                         BaiduPCSActionInfo.PCSCommonFileInfo file = (BaiduPCSActionInfo.PCSCommonFileInfo) i.next();
-                        Log.d(TAG, "file " + file.toString());
-                        Log.d(TAG, "文件或是目录的Md5值 " + file.blockList);
-                        Log.d(TAG, "文件的路径" + file.path);
-                        Log.d(TAG, "文件的服务器创建时间，以毫秒表示 " + file.cTime);
-                        Log.d(TAG, "文件在PCS的临时唯一标识id " + file.fsId);
-                        Log.d(TAG, "该路径下是否包括有子目录 " + file.hasSubFolder);
-                        Log.d(TAG, "当前路径是否是目录， 该参数在一些方法中没有意义 " + file.isDir);
-                        Log.d(TAG, "文件的服务器修改时间,以毫秒表示 " + file.mTime);
-                        Log.d(TAG, "文件或是目录的大小 " + file.size);
+                        Log.d(TAG, "List File " + file.toString());
+//                        Log.d(TAG, "文件或是目录的Md5值 " + file.blockList);
+//                        Log.d(TAG, "文件的路径" + file.path);
+//                        Log.d(TAG, "文件的服务器创建时间，以毫秒表示 " + file.cTime);
+//                        Log.d(TAG, "文件在PCS的临时唯一标识id " + file.fsId);
+//                        Log.d(TAG, "该路径下是否包括有子目录 " + file.hasSubFolder);
+//                        Log.d(TAG, "当前路径是否是目录， 该参数在一些方法中没有意义 " + file.isDir);
+//                        Log.d(TAG, "文件的服务器修改时间,以毫秒表示 " + file.mTime);
+//                        Log.d(TAG, "文件或是目录的大小 " + file.size);
                     }
 
                     mbUiThreadHandler.post(new Runnable() {

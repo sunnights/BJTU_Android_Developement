@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="cn.edu.bjtu.soundrecorder">
+    package="cn.edu.bjtu.soundrecorder">
 
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -11,14 +11,15 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 
     <application
-        android:name=".ContextUtil"
+        android:name=".utils.ContextUtil"
         android:allowBackup="true"
         android:icon="@drawable/myic_lancher"
-        android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:label="@string/app_name">
+        <!--android:theme="@style/ThemeOverlay.AppCompat.ActionBar"-->
         <activity
             android:name=".SoundRecorderActivity"
             android:label="@string/app_name"
+
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -27,6 +28,14 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".LoginActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"/>
+
+        <activity android:name=".testActivity"
+            android:label="交大Recorder"
+            android:screenOrientation="portrait"/>
         <service
             android:name=".NetworkStateService"
             android:enabled="true"
